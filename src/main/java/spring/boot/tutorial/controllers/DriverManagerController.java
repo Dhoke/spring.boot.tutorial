@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,10 +24,10 @@ public class DriverManagerController {
 	private static final String _PW = "";
 
 	@RequestMapping(path = "/books", method = RequestMethod.GET)
-	public BookBean[] getTheOnlyBook() {
+	public BookBean[] getAllBooks() {
 
 		String query = "SELECT * FROM TEST_SCHEMA.BOOKS";
-		List<BookBean> books = new ArrayList<>();
+		List<BookBean> allBooksInDB = new ArrayList<>();
 
 		try {
 			Class.forName("org.h2.Driver");
@@ -44,14 +45,14 @@ public class DriverManagerController {
 				book.setId(rs.getInt(1));
 				book.setTitle(rs.getString(2));
 				book.setAuthor(rs.getString(3));
-				books.add(book);
+				allBooksInDB.add(book);
 			}
 
 		} catch (SQLException ex) {
 			throw new RuntimeException(ex);
 		}
 
-		return books.toArray(new BookBean[books.size()]);
+		return allBooksInDB.toArray(new BookBean[allBooksInDB.size()]);
 	}
 
 	@RequestMapping(path = "/books/{bookId}", method = RequestMethod.GET)
@@ -80,6 +81,29 @@ public class DriverManagerController {
 		}
 
 		return book;
+	}
+	
+	@RequestMapping(path = "/books", method = RequestMethod.POST, consumes="application/json")
+	public void addBook(@RequestBody BookBean book) {
+		
+		try {
+			Class.forName("org.h2.Driver");
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+		
+		try (Connection con = DriverManager.getConnection(_URL, _USER, _PW)) {		
+			
+			String query = "INSERT INTO TEST_SCHEMA.BOOKS VALUES (";
+			query = query + book.getId() + ", '" + book.getTitle() + "', ";
+			query = query + "'" + book.getAuthor() + "')";
+			
+			Statement statement = con.createStatement();
+			statement.executeUpdate(query);
+			
+		} catch(SQLException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 }
