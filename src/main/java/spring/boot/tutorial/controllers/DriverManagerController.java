@@ -5,6 +5,8 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,10 +23,10 @@ public class DriverManagerController {
 	private static final String _PW = "";
 
 	@RequestMapping(path = "/books", method = RequestMethod.GET)
-	public BookBean getTheOnlyBook() {
+	public BookBean[] getTheOnlyBook() {
 
 		String query = "SELECT * FROM TEST_SCHEMA.BOOKS";
-		BookBean book = new BookBean();
+		List<BookBean> books = new ArrayList<>();
 
 		try {
 			Class.forName("org.h2.Driver");
@@ -37,17 +39,19 @@ public class DriverManagerController {
 				ResultSet rs = st.executeQuery(query)) {
 
 			while (rs.next()) {
+				
+				BookBean book = new BookBean();
 				book.setId(rs.getInt(1));
 				book.setTitle(rs.getString(2));
 				book.setAuthor(rs.getString(3));
-				System.out.printf("%d %s %s%n", rs.getInt(1), rs.getString(2), rs.getString(3));
+				books.add(book);
 			}
 
 		} catch (SQLException ex) {
 			throw new RuntimeException(ex);
 		}
 
-		return book;
+		return books.toArray(new BookBean[books.size()]);
 	}
 
 	@RequestMapping(path = "/books/{bookId}", method = RequestMethod.GET)
