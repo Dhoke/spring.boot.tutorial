@@ -105,5 +105,26 @@ public class DriverManagerController {
 			throw new RuntimeException(e);
 		}
 	}
+	
+	@RequestMapping(path="/books/{bookId}", method = RequestMethod.DELETE)
+	public void deleteBook(@PathVariable int bookId) {
+		
+		try {
+			Class.forName("org.h2.Driver");
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+		
+		try (Connection con = DriverManager.getConnection(_URL, _USER, _PW)) {		
+			
+			String query = "DELETE FROM TEST_SCHEMA.BOOKS WHERE ID=" + bookId;
+			
+			Statement statement = con.createStatement();
+			statement.executeUpdate(query);
+			
+		} catch(SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 }
