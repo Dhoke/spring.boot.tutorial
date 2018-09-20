@@ -126,5 +126,29 @@ public class DriverManagerController {
 			throw new RuntimeException(e);
 		}
 	}
+	
+	@RequestMapping(path="/books", method=RequestMethod.PUT)
+	public void updateBook(@RequestBody BookBean book) {
+		
+		try {
+			Class.forName("org.h2.Driver");
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+		
+		try (Connection con = DriverManager.getConnection(_URL, _USER, _PW)) {		
+			
+			String query = "UPDATE TEST_SCHEMA.BOOKS SET ID=" + book.getId() + ", ";
+			query = query + "AUTHOR='" + book.getAuthor() + "', ";
+			query = query + "TITLE='" + book.getTitle() + "' ";
+			query = query + "WHERE ID=" + book.getId();
+			
+			Statement statement = con.createStatement();
+			statement.executeUpdate(query);
+			
+		} catch(SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 }
