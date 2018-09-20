@@ -2,6 +2,7 @@ package spring.boot.tutorial.controllers;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -59,7 +60,7 @@ public class DriverManagerController {
 	public BookBean getSpecificBook(@PathVariable int bookId) {
 
 		BookBean book = new BookBean();
-		String query = "SELECT * FROM TEST_SCHEMA.BOOKS WHERE ID=" + bookId;
+		String query = "SELECT * FROM TEST_SCHEMA.BOOKS WHERE ID=?";
 
 		try {
 			Class.forName("org.h2.Driver");
@@ -67,10 +68,13 @@ public class DriverManagerController {
 			throw new RuntimeException(e);
 		}
 
-		try (Connection con = DriverManager.getConnection(_URL, _USER, _PW);
-				Statement st = con.createStatement();
-				ResultSet rs = st.executeQuery(query)) {
+		try (Connection con = DriverManager.getConnection(_URL, _USER, _PW)) {
 
+			PreparedStatement st = con.prepareStatement(query);
+			st.setInt(1, bookId);
+			
+			ResultSet rs = st.executeQuery();
+			
 			rs.next();
 			book.setId(rs.getInt(1));
 			book.setTitle(rs.getString(2));
@@ -94,12 +98,14 @@ public class DriverManagerController {
 		
 		try (Connection con = DriverManager.getConnection(_URL, _USER, _PW)) {		
 			
-			String query = "INSERT INTO TEST_SCHEMA.BOOKS VALUES (";
-			query = query + book.getId() + ", '" + book.getTitle() + "', ";
-			query = query + "'" + book.getAuthor() + "')";
+			String query = "INSERT INTO TEST_SCHEMA.BOOKS VALUES (?, ?, ?)";
 			
-			Statement statement = con.createStatement();
-			statement.executeUpdate(query);
+			PreparedStatement statement = con.prepareStatement(query);
+			statement.setInt(1, book.getId());
+			statement.setString(2, book.getTitle());
+			statement.setString(3, book.getAuthor());
+			
+			statement.execute();
 			
 		} catch(SQLException e) {
 			throw new RuntimeException(e);
@@ -117,10 +123,12 @@ public class DriverManagerController {
 		
 		try (Connection con = DriverManager.getConnection(_URL, _USER, _PW)) {		
 			
-			String query = "DELETE FROM TEST_SCHEMA.BOOKS WHERE ID=" + bookId;
+			String query = "DELETE FROM TEST_SCHEMA.BOOKS WHERE ID=?";
 			
-			Statement statement = con.createStatement();
-			statement.executeUpdate(query);
+			PreparedStatement statement = con.prepareStatement(query);
+			statement.setInt(1, bookId);
+			
+			statement.execute();
 			
 		} catch(SQLException e) {
 			throw new RuntimeException(e);
@@ -138,13 +146,15 @@ public class DriverManagerController {
 		
 		try (Connection con = DriverManager.getConnection(_URL, _USER, _PW)) {		
 			
-			String query = "UPDATE TEST_SCHEMA.BOOKS SET ID=" + book.getId() + ", ";
-			query = query + "AUTHOR='" + book.getAuthor() + "', ";
-			query = query + "TITLE='" + book.getTitle() + "' ";
-			query = query + "WHERE ID=" + book.getId();
+			String query = "UPDATE TEST_SCHEMA.BOOKS SET ID=?, AUTHOR=?, TITLE=? WHERE ID=?";
 			
-			Statement statement = con.createStatement();
-			statement.executeUpdate(query);
+			PreparedStatement statement = con.prepareStatement(query);
+			statement.setInt(1,  book.getId());
+			statement.setString(2, book.getAuthor());
+			statement.setString(3, book.getTitle());
+			statement.setInt(4,  book.getId());
+			
+			statement.execute();
 			
 		} catch(SQLException e) {
 			throw new RuntimeException(e);
